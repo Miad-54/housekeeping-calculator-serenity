@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="description" content="Mobile-friendly housekeeping work hour & salary split calculator for holiday apartments with offline support.">
+    <title>Holiday Apartment Work Hour Calculator</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Web App Manifest for Mobile Home Screen Installation -->
+    <link rel="manifest" id="manifestPlaceholder">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; color: black; }
+            .print-card { border: none !important; shadow: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-20">
+
+    <!-- Header Navigation -->
+    <header class="bg-indigo-600 text-white shadow-lg sticky top-0 z-30 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-2">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/10 p-2 rounded-xl backdrop-blur-md flex items-center justify-center">
+                    <i class="fa-solid fa-broom text-yellow-300 text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold tracking-tight leading-tight">CleanHours</h1>
+                    <p class="text-[10px] sm:text-xs text-indigo-200">Housekeeping & Partner Split Calculator</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <!-- Mobile Install Guide Button -->
+                <button id="mobileInstallBtn" class="bg-indigo-700/80 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold border border-indigo-400/40 flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-mobile-screen-button text-yellow-300"></i>
+                    <span class="hidden sm:inline">Add to Phone</span>
+                    <span class="sm:hidden">App Guide</span>
+                </button>
+
+                <!-- Hourly Rate Picker -->
+                <div class="flex items-center bg-indigo-700/70 backdrop-blur-sm px-2.5 py-1 rounded-xl border border-indigo-500/30">
+                    <span class="text-[11px] text-indigo-200 font-medium mr-1">Rate:</span>
+                    <span class="text-[11px] font-semibold text-indigo-100">€</span>
+                    <input type="number" id="hourlyRateInput" min="0" step="0.5" value="15" 
+                           class="w-12 bg-indigo-900/70 border border-indigo-400/40 rounded px-1 py-0.5 text-xs text-white font-bold focus:outline-none focus:ring-1 focus:ring-yellow-400 text-center">
+                    <span class="text-[11px] text-indigo-200 ml-0.5">/h</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+
+        <!-- Top Notification Banner for Mobile Installation -->
+        <div id="mobileBanner" class="bg-gradient-to-r from-indigo-900 to-indigo-700 text-white p-4 rounded-2xl shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 no-print">
+            <div class="flex items-center space-x-3">
+                <div class="bg-yellow-400/20 text-yellow-300 p-2.5 rounded-xl text-xl">
+                    <i class="fa-solid fa-circle-info"></i>
+                </div>
+                <div>
+                    <h2 class="text-xs sm:text-sm font-bold">Use On Your Mobile Phone Offline</h2>
+                    <p class="text-[11px] sm:text-xs text-indigo-200">Install to home screen so you can log hours directly at apartments anytime!</p>
+                </div>
+            </div>
+            <button id="openGuideBannerBtn" class="w-full sm:w-auto px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-indigo-950 text-xs font-bold rounded-xl transition shadow-sm whitespace-nowrap text-center">
+                <i class="fa-solid fa-download mr-1.5"></i> Add to Home Screen
+            </button>
+        </div>
+
+        <!-- Monthly Dashboard Summary Stats -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Earned Time</p>
+                    <h3 class="text-lg sm:text-2xl font-extrabold text-slate-800 leading-tight" id="statTotalHours">0.00 <span class="text-xs font-normal text-slate-500">hrs</span></h3>
+                    <p class="text-[11px] text-indigo-600 font-semibold mt-0.5" id="statTotalHoursFormatted">0h 0m</p>
+                </div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg sm:text-xl shrink-0">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Pay</p>
+                    <h3 class="text-lg sm:text-2xl font-extrabold text-emerald-600 leading-tight" id="statTotalEarnings">€0.00</h3>
+                    <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Based on hourly rate</p>
+                </div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg sm:text-xl shrink-0">
+                    <i class="fa-solid fa-money-bill-wave"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Cleanings</p>
+                    <h3 class="text-lg sm:text-2xl font-extrabold text-slate-800 leading-tight" id="statTotalCleanings">0</h3>
+                    <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Apartments completed</p>
+                </div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg sm:text-xl shrink-0">
+                    <i class="fa-solid fa-house-circle-check"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 flex items-center justify-between col-span-1 sm:col-span-1">
+                <div class="w-full">
+                    <p class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Report Month</p>
+                    <input type="month" id="monthFilter" class="w-full bg-slate-100 border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Layout Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Left Column: Shift Entry & Apartment Presets -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- Daily Shift Entry Form -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-6 no-print">
+                    <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+                        <h2 class="text-base font-bold text-slate-800 flex items-center">
+                            <i class="fa-solid fa-calendar-plus text-indigo-600 mr-2"></i>Log Housekeeping Shift
+                        </h2>
+                        <span class="text-[10px] font-extrabold px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md uppercase">Daily Entry</span>
+                    </div>
+
+                    <form id="shiftForm" class="space-y-4">
+                        <!-- Date Picker -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" for="entryDate">Shift Date</label>
+                            <input type="date" id="entryDate" required 
+                                   class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
+                        </div>
+
+                        <!-- Apartment Select & Split List -->
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Apartments Cleaned Today</label>
+                                <span class="text-[11px] text-slate-400">Tap to add</span>
+                            </div>
+
+                            <!-- Selector Grid -->
+                            <div id="apartmentSelectionButtons" class="flex flex-wrap gap-1.5 mb-3 max-h-52 overflow-y-auto custom-scrollbar p-2 bg-slate-50 rounded-xl border border-slate-200">
+                                <!-- Dynamic buttons will be inserted here -->
+                            </div>
+
+                            <!-- Quick Preset Split Buttons -->
+                            <div id="globalSplitControls" class="hidden flex flex-wrap items-center justify-between bg-indigo-50/80 p-2.5 rounded-xl border border-indigo-100 gap-2 mb-3">
+                                <span class="text-xs font-bold text-indigo-900">Set Selected To:</span>
+                                <div class="flex items-center space-x-1.5">
+                                    <button type="button" id="setAllSoloBtn" class="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] rounded-lg border border-indigo-200 transition shadow-sm">
+                                        <i class="fa-solid fa-user mr-1 text-emerald-600"></i> All Solo (100%)
+                                    </button>
+                                    <button type="button" id="setAllShared2Btn" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] rounded-lg transition shadow-sm">
+                                        <i class="fa-solid fa-user-group mr-1 text-yellow-300"></i> All Shared (2 People)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Selected Apartments Settings Container -->
+                            <div id="selectedApartmentsContainer" class="space-y-2.5 max-h-80 overflow-y-auto custom-scrollbar pr-0.5">
+                                <p id="noApartmentsNotice" class="text-xs text-center text-slate-400 py-6 italic border border-dashed border-slate-200 rounded-xl">
+                                    No apartments selected for this shift. Tap apartment buttons above to add.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Extra Minutes & Notes -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1" for="extraMinutes">Extra Time (Minutes)</label>
+                                <div class="relative">
+                                    <input type="number" id="extraMinutes" min="0" value="0" placeholder="0" 
+                                           class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-3 pr-8 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <span class="absolute right-3 top-2 text-xs text-slate-400">min</span>
+                                </div>
+                                <span class="text-[10px] text-slate-400">Laundry, extra tasks, travel</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1" for="shiftNotes">Notes / Remarks</label>
+                                <input type="text" id="shiftNotes" placeholder="e.g., Linens, deep clean" 
+                                       class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <!-- Realtime Calculation Preview for the Shift -->
+                        <div class="bg-indigo-50/90 rounded-xl p-3.5 border border-indigo-100 flex justify-between items-center">
+                            <div>
+                                <span class="text-xs text-indigo-900 font-bold block">Calculated Earned Shift Time:</span>
+                                <span class="text-[11px] text-indigo-600 font-medium" id="shiftBreakdownPreview">0 apartments selected</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-lg font-extrabold text-indigo-700 block leading-none" id="shiftTotalPreview">0.00 hrs</span>
+                                <span class="text-xs font-bold text-indigo-500" id="shiftTotalFormattedPreview">(0h 0m)</span>
+                            </div>
+                        </div>
+
+                        <!-- Save Shift Button -->
+                        <button type="submit" 
+                                class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-sm">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>Save Shift Log</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Preset Apartment List & Custom Add -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-6 no-print">
+                    <div class="flex justify-between items-center mb-3 pb-3 border-b border-slate-100">
+                        <h2 class="text-base font-bold text-slate-800 flex items-center">
+                            <i class="fa-solid fa-building text-indigo-600 mr-2"></i>Apartment Presets (21 Total)
+                        </h2>
+                        <button id="toggleAddApartmentBtn" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center bg-indigo-50 px-2.5 py-1 rounded-lg">
+                            <i class="fa-solid fa-plus mr-1"></i> Add Custom
+                        </button>
+                    </div>
+
+                    <!-- Add New Apartment Form (Hidden by default) -->
+                    <form id="addApartmentForm" class="hidden bg-slate-50 p-3 rounded-xl border border-slate-200 mb-4 space-y-3">
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="col-span-2">
+                                <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Apartment Name</label>
+                                <input type="text" id="newAptName" placeholder="e.g., Haus Harz" required
+                                       class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Fix Hours</label>
+                                <input type="number" step="0.05" id="newAptHours" placeholder="2.75" required
+                                       class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" id="cancelAddAptBtn" class="px-2.5 py-1 text-xs text-slate-600 hover:bg-slate-200 rounded font-medium">Cancel</button>
+                            <button type="submit" class="px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold">Add Apartment</button>
+                        </div>
+                    </form>
+
+                    <!-- Preset List -->
+                    <div id="apartmentPresetList" class="space-y-1.5 max-h-60 overflow-y-auto custom-scrollbar pr-1">
+                        <!-- Dynamic preset list rendered here -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Reports & Shift Log Table -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- Monthly Export & Sharing Center -->
+                <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl shadow-md p-5 border border-slate-800 no-print">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                        <div>
+                            <h2 class="text-sm sm:text-base font-bold text-white flex items-center">
+                                <i class="fa-solid fa-paper-plane text-yellow-400 mr-2"></i>End-of-Month Monthly Reports
+                            </h2>
+                            <p class="text-xs text-slate-300 mt-0.5">Generate and share your work report for management or partners</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                        <!-- Copy for WhatsApp / Email -->
+                        <button id="copyWhatsAppReportBtn" class="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 shadow-sm">
+                            <i class="fa-brands fa-whatsapp text-lg"></i>
+                            <span>Copy Text Report</span>
+                        </button>
+
+                        <!-- Print / PDF -->
+                        <button id="printBtn" class="bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 shadow-sm">
+                            <i class="fa-solid fa-file-pdf text-lg"></i>
+                            <span>Print / Save PDF</span>
+                        </button>
+
+                        <!-- CSV Download -->
+                        <button id="exportCsvBtn" class="bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 shadow-sm">
+                            <i class="fa-solid fa-file-csv text-lg"></i>
+                            <span>Download CSV</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Shift Log Table Container -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-6 print-card">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-800 flex items-center">
+                                <i class="fa-solid fa-clipboard-list text-indigo-600 mr-2"></i>Work Shift Log History
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-0.5" id="reportSubtitleText">Filtered by selected month</p>
+                        </div>
+
+                        <div class="no-print">
+                            <button id="clearAllLogsBtn" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition flex items-center" title="Clear logs for selected month">
+                                <i class="fa-solid fa-trash-can mr-1"></i> Clear Month
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- History Table -->
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                    <th class="py-2.5 px-3">Date</th>
+                                    <th class="py-2.5 px-3">Apartments & Partner Splits</th>
+                                    <th class="py-2.5 px-3 text-right">Earned Hours</th>
+                                    <th class="py-2.5 px-3 text-right">Pay (€)</th>
+                                    <th class="py-2.5 px-3 text-center no-print">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTableBody" class="divide-y divide-slate-100 text-xs">
+                                <!-- Dynamic logs table rows -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Empty State Message -->
+                    <div id="noLogsNotice" class="hidden text-center py-12 text-slate-400 no-print">
+                        <i class="fa-regular fa-folder-open text-4xl mb-3 text-slate-300"></i>
+                        <p class="text-sm font-semibold text-slate-600">No shift logs found for this month.</p>
+                        <p class="text-xs text-slate-400 mt-1">Select apartments on the left and tap 'Save Shift Log' to record your hours.</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Mobile Installation & Offline Guide Modal -->
+    <div id="mobileGuideModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 transform transition-transform scale-95" id="mobileGuideModalCard">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-800">Save to Mobile / Home Screen</h3>
+                </div>
+                <button id="closeGuideModalBtn" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-600 leading-relaxed">
+                You can install this Work Hour Calculator directly onto your iPhone or Android home screen like a normal app. It works <strong>offline</strong> without internet!
+            </p>
+
+            <!-- Instructions tabs -->
+            <div class="space-y-3">
+                <!-- iPhone iOS Instructions -->
+                <div class="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-3.5 space-y-1.5">
+                    <h4 class="text-xs font-bold text-indigo-950 flex items-center">
+                        <i class="fa-brands fa-apple text-sm mr-2 text-indigo-700"></i> iPhone / Safari Instructions
+                    </h4>
+                    <ol class="text-xs text-slate-700 space-y-1 pl-5 list-decimal font-medium">
+                        <li>Tap the <strong>Share button</strong> <i class="fa-solid fa-share-nodes text-indigo-600 mx-0.5"></i> in Safari bottom bar.</li>
+                        <li>Scroll down and tap <strong>"Add to Home Screen"</strong> <i class="fa-regular fa-square-plus text-indigo-600 mx-0.5"></i>.</li>
+                        <li>Tap <strong>Add</strong> at the top right.</li>
+                    </ol>
+                </div>
+
+                <!-- Android Instructions -->
+                <div class="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-3.5 space-y-1.5">
+                    <h4 class="text-xs font-bold text-emerald-950 flex items-center">
+                        <i class="fa-brands fa-android text-sm mr-2 text-emerald-700"></i> Android / Chrome Instructions
+                    </h4>
+                    <ol class="text-xs text-slate-700 space-y-1 pl-5 list-decimal font-medium">
+                        <li>Tap the <strong>3 dots menu</strong> <i class="fa-solid fa-ellipsis-vertical text-emerald-600 mx-0.5"></i> in top right of Chrome.</li>
+                        <li>Tap <strong>"Add to Home Screen"</strong> or <strong>"Install App"</strong>.</li>
+                        <li>Confirm by tapping <strong>Add</strong>.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button id="gotItGuideBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-3 rounded-xl transition shadow-md">
+                    Got it! Close Guide
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-2.5 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none z-50">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+        <span id="toastMsg" class="font-medium">Action executed.</span>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Data Store Keys
+        const STORAGE_KEY_APTS = 'clean_hours_apartments_v3';
+        const STORAGE_KEY_LOGS = 'clean_hours_logs_v3';
+        const STORAGE_KEY_RATE = 'clean_hours_rate_v3';
+
+        // Default Presets extracted from the list (Hours converted from German HH.MM notation to decimal hours)
+        const DEFAULT_APARTMENTS = [
+            { id: 'apt_emma2', name: 'Emma 2', hours: 1.25, displayTime: '1h 15m' },
+            { id: 'apt_emma3', name: 'Emma 3', hours: 1.25, displayTime: '1h 15m' },
+            { id: 'apt_emma4', name: 'Emma 4', hours: 1.25, displayTime: '1h 15m' },
+            { id: 'apt_kl_oberharz', name: 'Kleine Oberharzerruhe', hours: 0.75, displayTime: '45m' },
+            { id: 'apt_oberharz', name: 'Oberharzerruhe', hours: 2.75, displayTime: '2h 45m' },
+            { id: 'apt_emma1', name: 'Emma 1', hours: 1.25, displayTime: '1h 15m' },
+            { id: 'apt_harzkind2', name: 'Harzkind 2', hours: 1.25, displayTime: '1h 15m' },
+            { id: 'apt_brocken', name: 'Brocken', hours: 2.75, displayTime: '2h 45m' },
+            { id: 'apt_paulsberg', name: 'Paulsberg', hours: 2.75, displayTime: '2h 45m' },
+            { id: 'apt_wurmberg', name: 'Wurmberg', hours: 2.75, displayTime: '2h 45m' },
+            { id: 'apt_atelier', name: 'Atelier', hours: 2.75, displayTime: '2h 45m' },
+            { id: 'apt_altescheune', name: 'Alte Scheune', hours: 3.75, displayTime: '3h 45m' },
+            { id: 'apt_landgraf', name: 'Landgraf', hours: 1.00, displayTime: '1h 00m' },
+            { id: 'apt_rubezahl', name: 'Suite Rübezahl', hours: 1.25, displayTime: '1h 15m' },
+            { id: 'apt_weitblick', name: 'Harzer Weitblick', hours: 1.50, displayTime: '1h 30m' },
+            { id: 'apt_gipfelblick', name: 'Gipfelblick', hours: 2.00, displayTime: '2h 00m' },
+            { id: 'apt_harzbaude', name: 'Harzbaude', hours: 2.25, displayTime: '2h 15m' },
+            { id: 'apt_gretel', name: 'Haus Gretel', hours: 3.25, displayTime: '3h 15m' },
+            { id: 'apt_dema', name: 'DeMa', hours: 2.75, displayTime: '2h 45m' },
+            { id: 'apt_lottas', name: 'Lottas Tanne', hours: 2.75, displayTime: '2h 45m' },
+            { id: 'apt_markgraf', name: 'Markgraf', hours: 2.50, displayTime: '2h 30m' }
+        ];
+
+        // State variables
+        let apartments = [];
+        let logs = [];
+        let hourlyRate = 15.0;
+        let selectedShiftItems = []; // [{aptId, countPeople}]
+
+        // Helper: Convert decimal hours to HH:MM format
+        function formatHoursToHM(decimalHours) {
+            const totalMinutes = Math.round(decimalHours * 60);
+            const hrs = Math.floor(totalMinutes / 60);
+            const mins = totalMinutes % 60;
+            if (hrs === 0) return `${mins}m`;
+            if (mins === 0) return `${hrs}h`;
+            return `${hrs}h ${mins < 10 ? '0' : ''}${mins}m`;
+        }
+
+        // DOM Elements
+        const apartmentSelectionButtons = document.getElementById('apartmentSelectionButtons');
+        const selectedApartmentsContainer = document.getElementById('selectedApartmentsContainer');
+        const noApartmentsNotice = document.getElementById('noApartmentsNotice');
+        const globalSplitControls = document.getElementById('globalSplitControls');
+        const apartmentPresetList = document.getElementById('apartmentPresetList');
+        const logsTableBody = document.getElementById('logsTableBody');
+        const noLogsNotice = document.getElementById('noLogsNotice');
+        const shiftForm = document.getElementById('shiftForm');
+        const entryDateInput = document.getElementById('entryDate');
+        const extraMinutesInput = document.getElementById('extraMinutes');
+        const shiftNotesInput = document.getElementById('shiftNotes');
+        const hourlyRateInput = document.getElementById('hourlyRateInput');
+        const monthFilterInput = document.getElementById('monthFilter');
+
+        // Preview DOM Elements
+        const shiftTotalPreview = document.getElementById('shiftTotalPreview');
+        const shiftBreakdownPreview = document.getElementById('shiftBreakdownPreview');
+        const shiftTotalFormattedPreview = document.getElementById('shiftTotalFormattedPreview');
+
+        // Dashboard Stats Elements
+        const statTotalHours = document.getElementById('statTotalHours');
+        const statTotalHoursFormatted = document.getElementById('statTotalHoursFormatted');
+        const statTotalEarnings = document.getElementById('statTotalEarnings');
+        const statTotalCleanings = document.getElementById('statTotalCleanings');
+
+        // Modal Guide Elements
+        const mobileGuideModal = document.getElementById('mobileGuideModal');
+        const mobileGuideModalCard = document.getElementById('mobileGuideModalCard');
+
+        // Dynamic Manifest Generator for PWA Support
+        function generateManifest() {
+            const manifest = {
+                name: "Holiday Apartment Work Hour Calculator",
+                short_name: "CleanHours",
+                start_url: "./",
+                display: "standalone",
+                background_color: "#ffffff",
+                theme_color: "#4f46e5",
+                icons: [
+                    {
+                        src: "https://cdn-icons-png.flaticon.com/512/3063/3063822.png",
+                        sizes: "512x512",
+                        type: "image/png"
+                    }
+                ]
+            };
+            const stringManifest = JSON.stringify(manifest);
+            const blob = new Blob([stringManifest], {type: 'application/json'});
+            const manifestUrl = URL.createObjectURL(blob);
+            document.getElementById('manifestPlaceholder').setAttribute('href', manifestUrl);
+        }
+
+        // App Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            generateManifest();
+            initDefaults();
+            renderApartmentSelectorButtons();
+            renderApartmentPresets();
+            renderLogsTable();
+            updateDashboardStats();
+
+            // Set default date picker to today & filter to current month
+            const today = new Date().toISOString().split('T')[0];
+            entryDateInput.value = today;
+            monthFilterInput.value = today.substring(0, 7);
+
+            // Setup Event Listeners
+            extraMinutesInput.addEventListener('input', calculateShiftPreview);
+            hourlyRateInput.addEventListener('change', handleHourlyRateChange);
+            monthFilterInput.addEventListener('change', () => {
+                renderLogsTable();
+                updateDashboardStats();
+            });
+
+            // Quick Preset Split Button Handlers
+            document.getElementById('setAllSoloBtn').addEventListener('click', () => {
+                selectedShiftItems.forEach(item => item.countPeople = 1);
+                renderSelectedApartmentsForm();
+                calculateShiftPreview();
+            });
+            document.getElementById('setAllShared2Btn').addEventListener('click', () => {
+                selectedShiftItems.forEach(item => item.countPeople = 2);
+                renderSelectedApartmentsForm();
+                calculateShiftPreview();
+            });
+
+            // Custom Apartment Add Form Handlers
+            document.getElementById('toggleAddApartmentBtn').addEventListener('click', () => {
+                document.getElementById('addApartmentForm').classList.toggle('hidden');
+            });
+            document.getElementById('cancelAddAptBtn').addEventListener('click', () => {
+                document.getElementById('addApartmentForm').classList.add('hidden');
+            });
+            document.getElementById('addApartmentForm').addEventListener('submit', handleAddApartment);
+
+            // Daily Shift Form Submission
+            shiftForm.addEventListener('submit', handleSaveShift);
+
+            // Export & Sharing Listeners
+            document.getElementById('copyWhatsAppReportBtn').addEventListener('click', copyTextReportToClipboard);
+            document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
+            document.getElementById('printBtn').addEventListener('click', () => window.print());
+            document.getElementById('clearAllLogsBtn').addEventListener('click', handleClearAllLogs);
+
+            // Mobile Modal Listeners
+            document.getElementById('mobileInstallBtn').addEventListener('click', openGuideModal);
+            document.getElementById('openGuideBannerBtn').addEventListener('click', openGuideModal);
+            document.getElementById('closeGuideModalBtn').addEventListener('click', closeGuideModal);
+            document.getElementById('gotItGuideBtn').addEventListener('click', closeGuideModal);
+        });
+
+        // Initialize Data Stores
+        function initDefaults() {
+            const savedApts = localStorage.getItem(STORAGE_KEY_APTS);
+            if (!savedApts) {
+                apartments = [...DEFAULT_APARTMENTS];
+                saveApartmentsToStorage();
+            } else {
+                apartments = JSON.parse(savedApts);
+            }
+
+            const savedLogs = localStorage.getItem(STORAGE_KEY_LOGS);
+            logs = savedLogs ? JSON.parse(savedLogs) : [];
+
+            const savedRate = localStorage.getItem(STORAGE_KEY_RATE);
+            if (savedRate) {
+                hourlyRate = parseFloat(savedRate);
+                hourlyRateInput.value = hourlyRate;
+            }
+        }
+
+        function saveApartmentsToStorage() {
+            localStorage.setItem(STORAGE_KEY_APTS, JSON.stringify(apartments));
+        }
+
+        function saveLogsToStorage() {
+            localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+        }
+
+        // Render Apartment Selection Chips
+        function renderApartmentSelectorButtons() {
+            apartmentSelectionButtons.innerHTML = '';
+            apartments.forEach(apt => {
+                const isSelected = selectedShiftItems.some(item => item.aptId === apt.id);
+                const timeText = apt.displayTime || formatHoursToHM(apt.hours);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition flex items-center space-x-1 ${
+                    isSelected 
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-2 ring-indigo-300' 
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`;
+                btn.innerHTML = `
+                    <span>${apt.name}</span>
+                    <span class="${isSelected ? 'bg-indigo-700 text-indigo-100' : 'bg-slate-100 text-slate-600'} text-[10px] px-1.5 py-0.5 rounded-md font-medium">${timeText}</span>
+                `;
+                btn.addEventListener('click', () => toggleApartmentSelection(apt.id));
+                apartmentSelectionButtons.appendChild(btn);
+            });
+        }
+
+        // Toggle Selection of an apartment
+        function toggleApartmentSelection(aptId) {
+            const index = selectedShiftItems.findIndex(item => item.aptId === aptId);
+            if (index > -1) {
+                selectedShiftItems.splice(index, 1);
+            } else {
+                selectedShiftItems.push({
+                    aptId: aptId,
+                    countPeople: 1 // default solo
+                });
+            }
+            renderApartmentSelectorButtons();
+            renderSelectedApartmentsForm();
+            calculateShiftPreview();
+        }
+
+        // Render Selected Apartments Controls (With Partner Split Toggles)
+        function renderSelectedApartmentsForm() {
+            selectedApartmentsContainer.innerHTML = '';
+
+            if (selectedShiftItems.length === 0) {
+                selectedApartmentsContainer.appendChild(noApartmentsNotice);
+                noApartmentsNotice.classList.remove('hidden');
+                globalSplitControls.classList.add('hidden');
+                return;
+            }
+
+            noApartmentsNotice.classList.add('hidden');
+            globalSplitControls.classList.remove('hidden');
+
+            selectedShiftItems.forEach(item => {
+                const aptObj = apartments.find(a => a.id === item.aptId);
+                if (!aptObj) return;
+
+                const totalDecimalHours = aptObj.hours;
+                const earnedDecimal = totalDecimalHours / item.countPeople;
+                const totalFormattedTime = aptObj.displayTime || formatHoursToHM(totalDecimalHours);
+                const earnedFormattedTime = formatHoursToHM(earnedDecimal);
+
+                const card = document.createElement('div');
+                card.className = 'bg-white border border-slate-200/90 rounded-xl p-3 shadow-sm space-y-2 text-xs';
+                
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold text-slate-800 text-sm">${aptObj.name}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-md font-bold ${item.countPeople === 1 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
+                                ${item.countPeople === 1 ? 'Solo Work (100%)' : `Shared (${item.countPeople} People)`}
+                            </span>
+                        </div>
+                        <button type="button" class="remove-apt-btn text-slate-400 hover:text-rose-600 p-1" data-id="${item.aptId}">
+                            <i class="fa-solid fa-xmark text-base"></i>
+                        </button>
+                    </div>
+
+                    <!-- Split Buttons Selector -->
+                    <div class="flex flex-wrap items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-200 gap-2">
+                        <span class="text-[11px] font-bold text-slate-600">People Split:</span>
+                        <div class="flex items-center space-x-1">
+                            <button type="button" class="split-btn px-2 py-1 rounded text-[11px] font-bold transition ${item.countPeople === 1 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'}" data-[id]="${item.aptId}" data-people="1">1 Person</button>
+                            <button type="button" class="split-btn px-2 py-1 rounded text-[11px] font-bold transition ${item.countPeople === 2 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'}" data-[id]="${item.aptId}" data-people="2">2 People</button>
+                            <button type="button" class="split-btn px-2 py-1 rounded text-[11px] font-bold transition ${item.countPeople === 3 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'}" data-[id]="${item.aptId}" data-people="3">3 People</button>
+                            <button type="button" class="split-btn px-2 py-1 rounded text-[11px] font-bold transition ${item.countPeople === 4 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'}" data-[id]="${item.aptId}" data-people="4">4 People</button>
+                        </div>
+                    </div>
+
+                    <div class="text-[11px] text-indigo-700 font-semibold bg-indigo-50/60 p-2 rounded-lg flex items-center justify-between">
+                        <span><i class="fa-solid fa-calculator mr-1 text-indigo-400"></i> ${totalFormattedTime} ÷ ${item.countPeople} = <strong>${earnedFormattedTime}</strong></span>
+                        <span class="text-slate-500 font-normal">(${earnedDecimal.toFixed(2)} hrs earned)</span>
+                    </div>
+                `;
+
+                // Quick split button handler
+                card.querySelectorAll('.split-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const count = parseInt(e.currentTarget.dataset.people, 10);
+                        item.countPeople = count;
+                        renderSelectedApartmentsForm();
+                        calculateShiftPreview();
+                    });
+                });
+
+                // Remove button listener
+                card.querySelector('.remove-apt-btn').addEventListener('click', () => {
+                    toggleApartmentSelection(item.aptId);
+                });
+
+                selectedApartmentsContainer.appendChild(card);
+            });
+        }
+
+        // Calculate preview hours for shift form
+        function calculateShiftPreview() {
+            let totalAptHours = 0;
+            selectedShiftItems.forEach(item => {
+                const apt = apartments.find(a => a.id === item.aptId);
+                if (apt) {
+                    totalAptHours += (apt.hours / item.countPeople);
+                }
+            });
+
+            const extraMins = parseInt(extraMinutesInput.value, 10) || 0;
+            const extraHours = extraMins / 60;
+            const finalShiftHours = totalAptHours + extraHours;
+
+            shiftTotalPreview.textContent = `${finalShiftHours.toFixed(2)} hrs`;
+            shiftTotalFormattedPreview.textContent = `(${formatHoursToHM(finalShiftHours)})`;
+            shiftBreakdownPreview.textContent = `${selectedShiftItems.length} apts (${formatHoursToHM(totalAptHours)}) + ${extraMins}m extra`;
+
+            return finalShiftHours;
+        }
+
+        // Add Custom Preset Apartment
+        function handleAddApartment(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('newAptName');
+            const hoursInput = document.getElementById('newAptHours');
+
+            const val = parseFloat(hoursInput.value);
+            if (isNaN(val) || val <= 0) {
+                showToast('Please enter a valid fixed hour value.', true);
+                return;
+            }
+
+            const newApt = {
+                id: 'apt_' + Date.now(),
+                name: nameInput.value.trim(),
+                hours: val,
+                displayTime: formatHoursToHM(val)
+            };
+
+            apartments.push(newApt);
+            saveApartmentsToStorage();
+
+            nameInput.value = '';
+            hoursInput.value = '';
+            document.getElementById('addApartmentForm').classList.add('hidden');
+
+            renderApartmentSelectorButtons();
+            renderApartmentPresets();
+            showToast('New apartment added successfully.');
+        }
+
+        // Render Preset Management List
+        function renderApartmentPresets() {
+            apartmentPresetList.innerHTML = '';
+            apartments.forEach(apt => {
+                const formattedTime = apt.displayTime || formatHoursToHM(apt.hours);
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs';
+                item.innerHTML = `
+                    <div>
+                        <span class="font-bold text-slate-800">${apt.name}</span>
+                        <span class="text-slate-500 ml-2">(${formattedTime} / ${apt.hours} hrs)</span>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <button type="button" onclick="editApartment('${apt.id}')" class="p-1 text-slate-400 hover:text-indigo-600">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button type="button" onclick="deleteApartment('${apt.id}')" class="p-1 text-slate-400 hover:text-rose-600">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+                apartmentPresetList.appendChild(item);
+            });
+        }
+
+        // Delete Preset
+        window.deleteApartment = function(id) {
+            if (apartments.length <= 1) {
+                showToast('At least one apartment preset is required.', true);
+                return;
+            }
+            apartments = apartments.filter(a => a.id !== id);
+            selectedShiftItems = selectedShiftItems.filter(s => s.aptId !== id);
+            saveApartmentsToStorage();
+            renderApartmentSelectorButtons();
+            renderSelectedApartmentsForm();
+            renderApartmentPresets();
+            calculateShiftPreview();
+            showToast('Apartment preset deleted.');
+        };
+
+        // Edit Preset
+        window.editApartment = function(id) {
+            const apt = apartments.find(a => a.id === id);
+            if (!apt) return;
+            const newName = prompt('Edit Apartment Name:', apt.name);
+            if (!newName) return;
+            const newHoursStr = prompt('Edit Fixed Hours:', apt.hours);
+            if (!newHoursStr) return;
+            const newHours = parseFloat(newHoursStr);
+            if (isNaN(newHours) || newHours <= 0) return;
+
+            apt.name = newName.trim();
+            apt.hours = newHours;
+            apt.displayTime = formatHoursToHM(newHours);
+            saveApartmentsToStorage();
+            renderApartmentSelectorButtons();
+            renderSelectedApartmentsForm();
+            renderApartmentPresets();
+            calculateShiftPreview();
+            renderLogsTable();
+            showToast('Apartment updated successfully.');
+        };
+
+        // Handle Daily Shift Log Save
+        function handleSaveShift(e) {
+            e.preventDefault();
+
+            if (selectedShiftItems.length === 0) {
+                showToast('Please select at least one apartment.', true);
+                return;
+            }
+
+            const shiftDate = entryDateInput.value;
+            const extraMins = parseInt(extraMinutesInput.value, 10) || 0;
+            const notes = shiftNotesInput.value.trim();
+
+            let shiftApartmentsDetails = [];
+            let totalCalculatedHours = 0;
+
+            selectedShiftItems.forEach(item => {
+                const aptObj = apartments.find(a => a.id === item.aptId);
+                if (aptObj) {
+                    const earned = aptObj.hours / item.countPeople;
+                    shiftApartmentsDetails.push({
+                        id: aptObj.id,
+                        name: aptObj.name,
+                        fixedHours: aptObj.hours,
+                        displayTime: aptObj.displayTime || formatHoursToHM(aptObj.hours),
+                        countPeople: item.countPeople,
+                        earnedHours: earned
+                    });
+                    totalCalculatedHours += earned;
+                }
+            });
+
+            totalCalculatedHours += (extraMins / 60);
+
+            const newLogEntry = {
+                id: 'log_' + Date.now(),
+                date: shiftDate,
+                apartments: shiftApartmentsDetails,
+                extraMinutes: extraMins,
+                totalHours: totalCalculatedHours,
+                notes: notes
+            };
+
+            logs.unshift(newLogEntry);
+            saveLogsToStorage();
+
+            // Reset Shift Selection Form
+            selectedShiftItems = [];
+            extraMinutesInput.value = '0';
+            shiftNotesInput.value = '';
+            renderApartmentSelectorButtons();
+            renderSelectedApartmentsForm();
+            calculateShiftPreview();
+
+            // Refresh UI
+            renderLogsTable();
+            updateDashboardStats();
+            showToast('Shift entry saved successfully!');
+        }
+
+        // Render Shift History Logs
+        function renderLogsTable() {
+            logsTableBody.innerHTML = '';
+            const filterMonth = monthFilterInput.value; // YYYY-MM
+            document.getElementById('reportSubtitleText').textContent = `Report for ${formatMonthLabel(filterMonth)}`;
+
+            const filteredLogs = logs.filter(log => log.date.startsWith(filterMonth));
+
+            if (filteredLogs.length === 0) {
+                noLogsNotice.classList.remove('hidden');
+                return;
+            } else {
+                noLogsNotice.classList.add('hidden');
+            }
+
+            filteredLogs.forEach(log => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-slate-50/80 transition border-b border-slate-100 text-xs';
+
+                // Badges HTML
+                let aptBadgesHtml = log.apartments.map(apt => {
+                    const splitText = apt.countPeople === 1 
+                        ? '<span class="text-emerald-700 font-bold bg-emerald-50 px-1 rounded">Solo</span>' 
+                        : `<span class="text-amber-800 font-bold bg-amber-50 px-1 rounded">Split (${apt.countPeople}p)</span>`;
+                    const calcDetail = apt.countPeople > 1 
+                        ? `${apt.displayTime} ÷ ${apt.countPeople}` 
+                        : `${apt.displayTime}`;
+
+                    return `
+                        <div class="inline-flex items-center space-x-1.5 bg-slate-100 border border-slate-200 rounded-md px-2 py-1 m-0.5">
+                            <span class="font-bold text-slate-800">${apt.name}</span>
+                            <span class="text-slate-300">|</span>
+                            <span class="text-slate-600 font-medium">${calcDetail} = <strong>${formatHoursToHM(apt.earnedHours)}</strong> (${splitText})</span>
+                        </div>
+                    `;
+                }).join('');
+
+                if (log.extraMinutes > 0) {
+                    aptBadgesHtml += `
+                        <div class="inline-flex items-center bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-md px-2 py-1 m-0.5 font-bold">
+                            <i class="fa-solid fa-plus-circle mr-1 text-[10px]"></i> +${log.extraMinutes}m extra
+                        </div>
+                    `;
+                }
+
+                if (log.notes) {
+                    aptBadgesHtml += `
+                        <div class="text-[11px] text-slate-500 italic mt-1 flex items-center">
+                            <i class="fa-regular fa-note-sticky mr-1 text-slate-400"></i> "${log.notes}"
+                        </div>
+                    `;
+                }
+
+                const earnedPay = log.totalHours * hourlyRate;
+
+                row.innerHTML = `
+                    <td class="py-3 px-3 font-bold text-slate-700 whitespace-nowrap">
+                        ${formatDate(log.date)}
+                    </td>
+                    <td class="py-3 px-3">
+                        <div class="flex flex-wrap items-center">${aptBadgesHtml}</div>
+                    </td>
+                    <td class="py-3 px-3 text-right font-extrabold text-indigo-600 text-sm whitespace-nowrap">
+                        ${formatHoursToHM(log.totalHours)} <span class="text-xs font-normal text-slate-500">(${log.totalHours.toFixed(2)}h)</span>
+                    </td>
+                    <td class="py-3 px-3 text-right font-bold text-emerald-600 text-sm whitespace-nowrap">
+                        €${earnedPay.toFixed(2)}
+                    </td>
+                    <td class="py-3 px-3 text-center whitespace-nowrap no-print">
+                        <button onclick="deleteLog('${log.id}')" class="text-slate-400 hover:text-rose-600 transition p-1">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+
+                logsTableBody.appendChild(row);
+            });
+        }
+
+        // Delete Shift Log
+        window.deleteLog = function(id) {
+            if (confirm('Delete this shift log entry?')) {
+                logs = logs.filter(l => l.id !== id);
+                saveLogsToStorage();
+                renderLogsTable();
+                updateDashboardStats();
+                showToast('Shift log deleted.');
+            }
+        };
+
+        // Clear Monthly Logs
+        function handleClearAllLogs() {
+            const filterMonth = monthFilterInput.value;
+            const monthLogs = logs.filter(log => log.date.startsWith(filterMonth));
+
+            if (monthLogs.length === 0) {
+                showToast('No logs exist for this month.', true);
+                return;
+            }
+
+            if (confirm(`Clear all logs for ${formatMonthLabel(filterMonth)}?`)) {
+                logs = logs.filter(log => !log.date.startsWith(filterMonth));
+                saveLogsToStorage();
+                renderLogsTable();
+                updateDashboardStats();
+                showToast('Month logs cleared.');
+            }
+        }
+
+        // Update Dashboard Summary Stats
+        function updateDashboardStats() {
+            const filterMonth = monthFilterInput.value;
+            const monthLogs = logs.filter(log => log.date.startsWith(filterMonth));
+
+            let totalHours = 0;
+            let totalCleaningsCount = 0;
+
+            monthLogs.forEach(log => {
+                totalHours += log.totalHours;
+                totalCleaningsCount += log.apartments.length;
+            });
+
+            const totalEarnings = totalHours * hourlyRate;
+
+            statTotalHours.innerHTML = `${totalHours.toFixed(2)} <span class="text-xs font-normal text-slate-500">hrs</span>`;
+            statTotalHoursFormatted.textContent = formatHoursToHM(totalHours);
+            statTotalEarnings.textContent = `€${totalEarnings.toFixed(2)}`;
+            statTotalCleanings.textContent = totalCleaningsCount;
+        }
+
+        // Update Hourly Rate
+        function handleHourlyRateChange() {
+            const rate = parseFloat(hourlyRateInput.value);
+            if (!isNaN(rate) && rate >= 0) {
+                hourlyRate = rate;
+                localStorage.setItem(STORAGE_KEY_RATE, hourlyRate);
+                renderLogsTable();
+                updateDashboardStats();
+                showToast('Hourly rate updated.');
+            }
+        }
+
+        // Export Copyable Text Summary for WhatsApp / Email
+        function copyTextReportToClipboard() {
+            const filterMonth = monthFilterInput.value;
+            const monthLogs = logs.filter(log => log.date.startsWith(filterMonth)).sort((a,b) => a.date.localeCompare(b.date));
+
+            if (monthLogs.length === 0) {
+                showToast('No logs found for selected month.', true);
+                return;
+            }
+
+            let totalHours = 0;
+            let totalCleanings = 0;
+            monthLogs.forEach(l => {
+                totalHours += l.totalHours;
+                totalCleanings += l.apartments.length;
+            });
+
+            const totalPay = totalHours * hourlyRate;
+
+            let reportText = `🧹 *HOUSEKEEPING WORK REPORT* 🧹\n`;
+            reportText += `📅 *Month:* ${formatMonthLabel(filterMonth)}\n`;
+            reportText += `⏱️ *Total Earned Hours:* ${totalHours.toFixed(2)} hrs (${formatHoursToHM(totalHours)})\n`;
+            reportText += `💶 *Total Earned Pay:* €${totalPay.toFixed(2)} (at €${hourlyRate}/h)\n`;
+            reportText += `🏢 *Cleanings Done:* ${totalCleanings} apartments\n`;
+            reportText += `-----------------------------------\n\n`;
+
+            monthLogs.forEach(log => {
+                reportText += `📌 *${log.date}*\n`;
+                log.apartments.forEach(apt => {
+                    const splitStr = apt.countPeople > 1 ? ` (${apt.countPeople}-Person Split)` : ` (Solo)`;
+                    reportText += ` • ${apt.name}: ${formatHoursToHM(apt.earnedHours)}${splitStr}\n`;
+                });
+                if (log.extraMinutes > 0) {
+                    reportText += ` • Extra Time: +${log.extraMinutes}m\n`;
+                }
+                if (log.notes) {
+                    reportText += ` • Note: ${log.notes}\n`;
+                }
+                reportText += ` Daily Total: ${log.totalHours.toFixed(2)}h (${formatHoursToHM(log.totalHours)})\n\n`;
+            });
+
+            // Fallback clipboard method for legacy iframe support
+            const textarea = document.createElement('textarea');
+            textarea.value = reportText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('Monthly Summary copied to clipboard!');
+            } catch (err) {
+                showToast('Failed to copy text.', true);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // Export CSV
+        function exportToCSV() {
+            const filterMonth = monthFilterInput.value;
+            const monthLogs = logs.filter(log => log.date.startsWith(filterMonth));
+
+            if (monthLogs.length === 0) {
+                showToast('No logs available for CSV export.', true);
+                return;
+            }
+
+            let csvContent = 'data:text/csv;charset=utf-8,';
+            csvContent += 'Date,Apartments Cleaned Details,Extra Minutes,Total Earned Hours,Hourly Rate (EUR),Total Earnings (EUR),Notes\n';
+
+            monthLogs.forEach(log => {
+                const aptSummary = log.apartments.map(a => `${a.name} (${a.displayTime} / ${a.countPeople} people = ${a.earnedHours.toFixed(2)}h)`).join('; ');
+                const earnings = (log.totalHours * hourlyRate).toFixed(2);
+                const cleanNotes = log.notes ? log.notes.replace(/,/g, ' ') : '';
+
+                csvContent += `"${log.date}","${aptSummary}",${log.extraMinutes},${log.totalHours.toFixed(2)},${hourlyRate},${earnings},"${cleanNotes}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `Housekeeping_Report_${filterMonth}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast('CSV downloaded.');
+        }
+
+        // Mobile Guide Modal Open/Close
+        function openGuideModal() {
+            mobileGuideModal.classList.remove('hidden');
+            setTimeout(() => {
+                mobileGuideModal.classList.remove('opacity-0');
+                mobileGuideModalCard.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeGuideModal() {
+            mobileGuideModal.classList.add('opacity-0');
+            mobileGuideModalCard.classList.add('scale-95');
+            setTimeout(() => {
+                mobileGuideModal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Helpers
+        function formatDate(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function formatMonthLabel(yearMonthStr) {
+            if (!yearMonthStr) return '';
+            const [year, month] = yearMonthStr.split('-');
+            const date = new Date(year, month - 1);
+            return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.textContent = message;
+            if (isError) {
+                toastIcon.className = 'fa-solid fa-circle-exclamation text-rose-400 text-base';
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-check text-emerald-400 text-base';
+            }
+
+            toast.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
